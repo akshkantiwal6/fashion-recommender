@@ -1,18 +1,20 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/login";
 import Admin from "./pages/admin";
-import Upload from "./pages/upload"; // 🔥 capital U
+import Upload from "./pages/upload";
 
-function App() {
+export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="/upload" element={<Upload />} />
+        {[
+          ["/", <Login />],
+          ["/admin", <Admin />],
+          ["/upload", <Upload />],
+        ].map(([path, el]) => (
+          <Route key={path} path={path} element={el} />
+        ))}
       </Routes>
     </Router>
   );
 }
-
-export default App;

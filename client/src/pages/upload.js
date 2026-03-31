@@ -1,75 +1,136 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import bg from "../assets/background.jpg";
 
-function Upload() {
-  const [gender, setGender] = useState("");
-  const [occasion, setOccasion] = useState("");
-  const [weather, setWeather] = useState("");
-  const [have, setHave] = useState("");
-  const [age, setAge] = useState("");
+// slideshow imports 
+import m1 from "../assets/model1.png";
+import m2 from "../assets/model2.png";
+import m3 from "../assets/model3.png";
+import m4 from "../assets/model4.png";
+import m5 from "../assets/model5.png";
+import m6 from "../assets/model6.png";
+import m7 from "../assets/model7.png";
+import m8 from "../assets/model8.png";
+import m9 from "../assets/model9.png";
+import m10 from "../assets/model10.png";
+
+export default function Upload() {
+  const [form, setForm] = useState({
+    gender: "",
+    occasion: "",
+    weather: "",
+    have: "",
+    age: "",
+  });
+
   const [image, setImage] = useState("");
 
-  const handleRecommend = () => {
-    let imgName = "";
+  //slideshow
+  const images = [m1, m2, m3, m4, m5, m6, m7, m8, m9, m10];
+  const [index, setIndex] = useState(0);
 
-    if (have === "light_jeans") imgName = `${gender}_dark_shirt`;
-    else if (have === "dark_jeans") imgName = `${gender}_light_shirt`;
-    else if (have === "light_shirt") imgName = `${gender}_dark_jeans`;
-    else if (have === "dark_shirt") imgName = `${gender}_light_jeans`;
-    else imgName = `${gender}_${occasion}_${weather}`;
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % images.length);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const update = (key) => (e) =>
+    setForm({ ...form, [key]: e.target.value });
+
+  const handleRecommend = async () => {
+    const { gender, occasion, weather, have, age } = form;
+
+    const map = {
+      light_jeans: `${gender}_dark_shirt`,
+      dark_jeans: `${gender}_light_shirt`,
+      light_shirt: `${gender}_dark_jeans`,
+      dark_shirt: `${gender}_light_jeans`,
+    };
+
+    const imgName = map[have] || `${gender}_${occasion}_${weather}`;
 
     setImage(`/assets/${imgName}.png`);
+
+    // SAVE HISTORY
+    try {
+      await fetch("http://localhost:5000/save-history", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username: localStorage.getItem("username") || "guest",
+          gender,
+          occasion,
+          weather,
+          have,
+          age,
+          result: imgName,
+        }),
+      });
+    } catch {
+      console.log("History save error");
+    }
   };
 
   return (
     <div style={styles.page}>
       <div style={styles.overlay}></div>
 
-      {/* 🏠 Home */}
-      <button style={styles.homeBtn} onClick={() => window.location.href = "/"}>
+      <button style={styles.homeBtn} onClick={() => (window.location.href = "/")}>
         🏠
       </button>
 
       <div style={styles.cardWrapper}>
-        
-        {/* LEFT SIDE FORM */}
+
+        {/* SLIDESHOW */}
+        <div style={styles.slideBox}>
+          <img src={images[index]} alt="model" style={styles.slideImg} />
+          <h3 style={styles.slideText}>Trending Styles 🔥</h3>
+        </div>
+
+        {/* FORM */}
         <div style={styles.card}>
           <h2 style={styles.title}>Outfit Recommendation 😎</h2>
 
-          <select onChange={(e) => setHave(e.target.value)} style={styles.input}>
-            <option value="">Select What You Have</option>
-            <option value="light_jeans">Light Jeans</option>
-            <option value="dark_jeans">Dark Jeans</option>
-            <option value="light_shirt">Light Shirt</option>
-            <option value="dark_shirt">Dark Shirt</option>
-          </select>
-
-          <select onChange={(e) => setWeather(e.target.value)} style={styles.input}>
-            <option value="">Select Weather</option>
-            <option value="summer">Summer</option>
-            <option value="winter">Winter</option>
-            <option value="rainy">Rainy</option>
-          </select>
-
-          <select onChange={(e) => setOccasion(e.target.value)} style={styles.input}>
-            <option value="">Select Occasion</option>
-            <option value="casual">Casual</option>
-            <option value="formal">Formal</option>
-            <option value="party">Party</option>
-            <option value="wedding">Wedding</option>
-          </select>
-
-          <select onChange={(e) => setGender(e.target.value)} style={styles.input}>
-            <option value="">Select Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-          </select>
+          {[
+            ["have", "Select What You Have", [
+              ["light_jeans", "Light Jeans"],
+              ["dark_jeans", "Dark Jeans"],
+              ["light_shirt", "Light Shirt"],
+              ["dark_shirt", "Dark Shirt"],
+            ]],
+            ["weather", "Select Weather", [
+              ["summer", "Summer"],
+              ["winter", "Winter"],
+              ["rainy", "Rainy"],
+            ]],
+            ["occasion", "Select Occasion", [
+              ["casual", "Casual"],
+              ["formal", "Formal"],
+              ["party", "Party"],
+              ["wedding", "Wedding"],
+            ]],
+            ["gender", "Select Gender", [
+              ["male", "Male"],
+              ["female", "Female"],
+            ]],
+          ].map(([key, placeholder, options]) => (
+            <select key={key} onChange={update(key)} style={styles.input}>
+              <option value="">{placeholder}</option>
+              {options.map(([val, label]) => (
+                <option key={val} value={val}>{label}</option>
+              ))}
+            </select>
+          ))}
 
           <input
             type="number"
             placeholder="Enter Age"
             style={styles.input}
-            onChange={(e) => setAge(e.target.value)}
+            onChange={update("age")}
           />
 
           <button style={styles.btn} onClick={handleRecommend}>
@@ -77,12 +138,13 @@ function Upload() {
           </button>
         </div>
 
-        {/* RIGHT SIDE IMAGE */}
         {image && (
-          <div style={styles.imageBox}>
-            <img src={image} alt="outfit" style={styles.image} />
-          </div>
-        )}
+      <div style={styles.imageBox}>
+      <img src={image} alt="outfit" style={styles.image} />
+  
+      <p style={styles.imageText}>Styled Just For You 💫</p>
+        </div>
+  )}
 
       </div>
     </div>
@@ -120,9 +182,28 @@ const styles = {
 
   cardWrapper: {
     display: "flex",
-    gap: "25px",
+    gap: "60px",
     alignItems: "center",
     zIndex: 2,
+  },
+
+  slideBox: {
+    width: "260px",
+    textAlign: "center",
+    transform: "translate(-40px, 25px)",
+  },
+
+  slideImg: {
+    width: "100%",
+    height: "360px",
+    objectFit: "cover",
+    borderRadius: "12px",
+    boxShadow: "0 0 20px rgba(168,85,247,0.5)",
+  },
+
+  slideText: {
+    marginTop: "10px",
+    color: "#fff",
   },
 
   card: {
@@ -135,9 +216,7 @@ const styles = {
     boxShadow: "0 0 40px rgba(168,85,247,0.6)",
   },
 
-  title: {
-    marginBottom: "10px",
-  },
+  title: { marginBottom: "10px" },
 
   input: {
     width: "100%",
@@ -161,20 +240,27 @@ const styles = {
     cursor: "pointer",
   },
 
-  imageBox: {
-    width: "300px",
-    height: "400px",
-    borderRadius: "12px",
-    overflow: "hidden",
-    border: "2px solid rgba(168,85,247,0.5)",
-    boxShadow: "0 0 20px rgba(168,85,247,0.5)",
-  },
+ imageBox: {
+  width: "300px",
+  borderRadius: "12px",
+  border: "2px solid rgba(168,85,247,0.5)",
+  boxShadow: "0 0 20px rgba(168,85,247,0.5)",
+  overflow: "hidden",
+  display: "flex",
+  flexDirection: "column",
+},
 
   image: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  },
-};
+  width: "100%",
+  height: "400px",
+  objectFit: "cover",
+},
 
-export default Upload;
+  imageText: {
+  marginTop: "8px",
+  textAlign: "center",
+  color: "#fff",
+  fontSize: "14px",
+  opacity: 0.85,
+},
+};

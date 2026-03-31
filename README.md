@@ -39,4 +39,10 @@ Make sure MongoDB is running on your system.
 
 ---
 
-Made by Akshkantival
+## 👨‍💻 Made By
+
+- Aksh Kantiwal (24ESKCA018)
+- Aashish Dhanwani (24ESKCA006)
+- Aaryavardhan Singh Chauhan (24ESKCA005)
+- Ajay Kumar Meena (24ESKCA016)
+- Abhijeet Singh (24ESKCA010)
